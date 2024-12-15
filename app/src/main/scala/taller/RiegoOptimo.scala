@@ -194,6 +194,21 @@ class RiegoOptimo {
         
     }
 
+    def compararCostosMovilidad(
+        funcionSecuencial: (Finca, ProgRiego, Distancia) => Int, // Función secuencial a evaluar (costo de movilidad) recibe finca, programación y distancia que son tipos de datos Finca, ProgRiego y Distancia y devuelve un entero
+        funcionParalela: (Finca, ProgRiego, Distancia) => Int, // Función paralela a evaluar (costo de movilidad) recibe finca, programación y distancia que son tipos de datos vector de tablones, vector de turnos de riego y matriz de distancias y devuelve un entero
+        nombreSecuencial: String,
+        nombreParalela: String
+    )(finca: Finca, programacion: ProgRiego, distancia: Distancia): Unit = {
+        val tiempoSecuencial = withWarmer(new Warmer.Default) measure { funcionSecuencial(finca, programacion, distancia) }
+        val tiempoParalelo = withWarmer(new Warmer.Default) measure { funcionParalela(finca, programacion, distancia) }
+        val aceleracion = tiempoSecuencial.value / tiempoParalelo.value
+        
+        // Impresión de resultados
+        println(f"\nTiempo $nombreSecuencial: ${tiempoSecuencial.value}%.4f ms")
+        println(f"Tiempo $nombreParalela: ${tiempoParalelo.value}%.4f ms")
+        println(f"Aceleración: $aceleracion%.4f")
+    }
 
 
 }
