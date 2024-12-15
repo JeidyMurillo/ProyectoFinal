@@ -35,4 +35,18 @@ object App {
     }
   }
 
+  // Benchmarking para la generación de programaciones de riego
+  def benchmarkingProgramaciones(): Unit = {
+    val riego = new RiegoOptimo()
+    println("\n------------- Benchmarking: Generación de Programaciones de Riego ----------------")
+    val tamanos = List(5, 6, 7) // Tamaños más pequeños debido al crecimiento factorial
+
+    for (tamano <- tamanos) {
+      val finca = riego.fincaAlAzar(tamano)
+      println(f"\n------ Tamaño finca: $tamano ------")
+      riego.compararGeneracion(riego.generarProgramacionesRiego, riego.generarProgramacionesRiegoPar, "Secuencial", "Paralelo")(finca)
+    }
+  }
+
+
 }
