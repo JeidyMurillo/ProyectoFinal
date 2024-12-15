@@ -227,4 +227,20 @@ class RiegoOptimo {
     println(f"Aceleración: $aceleracion%.4f")
   }
 
+  def compararOptimo(
+        funcionSecuencial: (Finca, Distancia) => (ProgRiego, Int), // Funcion secuencial a evaluar recibe una finca y una matriz de distancias, devuelve una tupla con la programación de riego y un entero
+        funcionParalela: (Finca, Distancia) => (ProgRiego, Int),  // Funcion paralela a evaluar recibe una finca y una matriz de distancias, devuelve una tupla con la programación de riego y un entero
+        nombreSecuencial: String,
+        nombreParalela: String
+    )(finca: Finca, distancia: Distancia): Unit = {
+        val tiempoSecuencial = withWarmer(new Warmer.Default) measure { funcionSecuencial(finca, distancia) }
+        val tiempoParalelo = withWarmer(new Warmer.Default) measure { funcionParalela(finca, distancia) }
+        val aceleracion = tiempoSecuencial.value / tiempoParalelo.value
+
+        // Impresión de resultados
+        println(f"\nTiempo $nombreSecuencial: ${tiempoSecuencial.value}%.4f ms")
+        println(f"Tiempo $nombreParalela: ${tiempoParalelo.value}%.4f ms")
+        println(f"Aceleración: $aceleracion%.4f")
+    }
+
 }
