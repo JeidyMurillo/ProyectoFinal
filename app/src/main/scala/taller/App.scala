@@ -17,5 +17,22 @@ object App {
 
   def greeting(): String = "Hello, world!"
 
+  // Benchmarking para los costos de riego y movilidad
+  def benchmarkingCostos(): Unit = {
+    val riego = new RiegoOptimo() // Instancia de la clase RiegoOptimo
+    println("\n------------- Benchmarking: Costos de Riego y Movilidad ----------------")
+    val tamanos = List(10,3,4,5) // Tamaños de las fincas a evaluar
+    // Iteramos sobre los tamaños de las fincas
+    for (tamano <- tamanos) {
+      val finca = riego.fincaAlAzar(tamano)
+      val distancia = riego.distanciaAlAzar(tamano)
+      val programacion = riego.generarProgramacionesRiego(finca).head // Tomamos una programación
+      
+      println(f"\n------ Tamaño finca: $tamano ------")
+      riego.compararCostos(riego.costoRiegoFinca, riego.costoRiegoFincaPar, "Secuencial", "Paralelo")(finca, programacion)
+      riego.compararCostosMovilidad(riego.costoMovilidad, riego.costoMovilidadPar, "Secuencial", "Paralelo")(finca, programacion, distancia)
+      
+    }
+  }
 
 }
