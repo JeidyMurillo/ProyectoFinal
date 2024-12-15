@@ -3,10 +3,19 @@
  */
 package taller
 
+import common._
+import org.scalameter._
+import taller.RiegoOptimo
+
 object App {
+
+  // Método principal del programa
   def main(args: Array[String]): Unit = {
     println(greeting())
+    println("\n....... Iniciando benchmarking de Riego Optimo .......")
   }
 
   def greeting(): String = "Hello, world!"
+
+
 }
