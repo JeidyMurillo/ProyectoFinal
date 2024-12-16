@@ -132,6 +132,8 @@ class RiegoOptimo {
 
     //2.6. Calculando una programación de riego óptima
     def ProgramacionRiegoOptimo(f:Finca, d:Distancia) : (ProgRiego, Int) = {
+        // Dada una finca, calcula la programación optima de riego
+        // Generar programaciones y calcular costos de manera paralela
         // Dada una finca devuelve la programación de riego óptima
         val programaciones = generarProgramacionesRiego(f)
         val costos = programaciones.map(pi => 
@@ -161,11 +163,15 @@ class RiegoOptimo {
     //3.3. Paralelizando la programación de riego óptima
     def ProgramacionRiegoOptimoPar(f:Finca, d:Distancia) : (ProgRiego, Int) = {
         // Dada una finca, calcula la programación optima de riego
+        // Generar programaciones y calcular costos de manera paralela
         val programaciones = generarProgramacionesRiegoPar(f)
         val costos = programaciones.par.map(pi => 
             (pi, costoRiegoFincaPar(f, pi) + costoMovilidadPar(f, pi, d))
         )
+
+        // Seleccionar la programación con el costo mínimo
         costos.minBy(_._2)
+        
     }
     
     //3.4. Produciendo datos para hacer la evaluación comparativa
@@ -188,12 +194,62 @@ class RiegoOptimo {
         val aceleracion = tiempoSecuencial.value / tiempoParalelo.value
         
         // Impresión de resultados
-        println(f"\nTiempo $nombreSecuencial: ${tiempoSecuencial.value}%.4f ms") // %.4f imprime el número con 4 decimales
-        println(f"Tiempo $nombreParalela: ${tiempoParalelo.value}%.4f ms")
-        println(f"Aceleración: $aceleracion%.4f")
+
+        imprimirResultadosEnTabla(nombreSecuencial, tiempoSecuencial.value, nombreParalela, tiempoParalelo.value, aceleracion)
+    }
+
+    def compararCostosMovilidad(
+        funcionSecuencial: (Finca, ProgRiego, Distancia) => Int, // Función secuencial a evaluar (costo de movilidad) recibe finca, programación y distancia que son tipos de datos Finca, ProgRiego y Distancia y devuelve un entero
+        funcionParalela: (Finca, ProgRiego, Distancia) => Int, // Función paralela a evaluar (costo de movilidad) recibe finca, programación y distancia que son tipos de datos vector de tablones, vector de turnos de riego y matriz de distancias y devuelve un entero
+        nombreSecuencial: String,
+        nombreParalela: String
+    )(finca: Finca, programacion: ProgRiego, distancia: Distancia): Unit = {
+        val tiempoSecuencial = withWarmer(new Warmer.Default) measure { funcionSecuencial(finca, programacion, distancia) }
+        val tiempoParalelo = withWarmer(new Warmer.Default) measure { funcionParalela(finca, programacion, distancia) }
+        val aceleracion = tiempoSecuencial.value / tiempoParalelo.value
+        
+        // Impresión de resultados
+        imprimirResultadosEnTabla(nombreSecuencial, tiempoSecuencial.value, nombreParalela, tiempoParalelo.value, aceleracion)
+    }
+
+    // Comparación de generación de programaciones
+    def compararGeneracion(
+                            funcionSecuencial: Finca => Vector[ProgRiego], // Función secuencial a evaluar (generar programaciones) recibe una finca y devuelve un vector de programaciones
+                            funcionParalela: Finca => Vector[ProgRiego],  // Función paralela a evaluar (generar programaciones) recibe una finca y devuelve un vector de programaciones
+                            nombreSecuencial: String,
+                            nombreParalela: String
+                        )(finca: Finca): Unit = {
+        val tiempoSecuencial = withWarmer(new Warmer.Default) measure { funcionSecuencial(finca) }
+        val tiempoParalelo = withWarmer(new Warmer.Default) measure { funcionParalela(finca) }
+        val aceleracion = tiempoSecuencial.value / tiempoParalelo.value
+
+        // Impresión de resultados
+        imprimirResultadosEnTabla(nombreSecuencial, tiempoSecuencial.value, nombreParalela, tiempoParalelo.value, aceleracion)                        
+    }
+
+    def compararOptimo( funcionSecuencial: (Finca, Distancia) => (ProgRiego, Int), // Funcion secuencial a evaluar recibe una finca y una matriz de distancias, devuelve una tupla con la programación de riego y un entero
+        funcionParalela: (Finca, Distancia) => (ProgRiego, Int),  // Funcion paralela a evaluar recibe una finca y una matriz de distancias, devuelve una tupla con la programación de riego y un entero
+        nombreSecuencial: String,
+        nombreParalela: String
+    )(finca: Finca, distancia: Distancia): Unit = {
+        val tiempoSecuencial = withWarmer(new Warmer.Default) measure { funcionSecuencial(finca, distancia) }
+        val tiempoParalelo = withWarmer(new Warmer.Default) measure { funcionParalela(finca, distancia) }
+        val aceleracion = tiempoSecuencial.value / tiempoParalelo.value
+
+        // Impresión de resultados
+        imprimirResultadosEnTabla(nombreSecuencial, tiempoSecuencial.value, nombreParalela, tiempoParalelo.value, aceleracion)
         
     }
 
+    def imprimirResultadosEnTabla(nombreSecuencial: String, tiempoSecuencial: Double, nombreParalela: String, tiempoParalelo: Double, aceleracion: Double): Unit = {
+        println("-" * 44)
+        println(f"| ${"Métrica"}%-20s | ${"Tiempo (ms)"}%-20s ")
+        println("-" * 44)
+        println(f"| ${nombreSecuencial}%-20s | ${tiempoSecuencial}%.4f ")
+        println(f"| ${nombreParalela}%-20s | ${tiempoParalelo}%.4f ")
+        println(f"| ${"Aceleración"}%-20s | ${aceleracion}%.4f ")
+        println("-" * 44)
+    }
 
 
 }
